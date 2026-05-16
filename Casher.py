@@ -1,13 +1,13 @@
 import sqlite3
 from datetime import datetime
 
-# نظام الكاشير (يُحفظ في الذاكرة المؤقتة للزبون الحالي)
+
 current_order = []
 
 def db_connect():
     conn = sqlite3.connect('sales_report.db')
     c = conn.cursor()
-    # جدول المدير لتسجيل الفواتير المكتملة وإجمالي الأرباح والخصومات
+    
     c.execute('''CREATE TABLE IF NOT EXISTS daily_sales (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
@@ -18,7 +18,7 @@ def db_connect():
     conn.commit()
     return conn, c
 
-# --- وظائف الكاشير ---
+
 def cashier_add_item():
     item_name = input("Enter item name: ").strip()
     if not item_name: return
@@ -48,11 +48,11 @@ def cashier_checkout(c, conn):
         print("❌ Cannot checkout an empty cart.")
         return
     
-    # 1. حساب المجموع المبدئي
+       
     subtotal = sum(item['price'] * item['amount'] for item in current_order)
     disc = 0.0
     
-    # 2. التحقق من الشرط وسؤال الكاشير قبل تطبيق الخصم
+    
     if subtotal > 500:
         print(f"\n📢 Order total is ${subtotal:.2f} (Eligible for 10% discount!)")
         ask_discount = input("Do you want to apply the 10% discount? (y/n): ").strip().lower()
@@ -64,7 +64,7 @@ def cashier_checkout(c, conn):
     
     final_total = subtotal - disc
     
-    # 3. طباعة الفاتورة النهائية للزبون
+    
     print("\n========================")
     print("      RECEIPT           ")
     print("========================")
@@ -77,18 +77,18 @@ def cashier_checkout(c, conn):
     print(f"FINAL PAID: ${final_total:.2f}")
     print("========================")
 
-    # 4. ترحيل البيانات بدقة للوحة تحكم المدير
+    
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute("INSERT INTO daily_sales (timestamp, subtotal, discount_issued, final_total) VALUES (?, ?, ?, ?)",
               (timestamp, subtotal, disc, final_total))
     conn.commit()
     
-    # 5. تفريغ العربة للزبون التالي
+    
     current_order.clear()
     print("✅ Payment Confirmed & Saved to Manager Dashboard.")
 
 
-# --- وظائف المدير ---
+
 def manager_view_reports(c):
     print("\n=== 📊 MANAGER DASHBOARD ===")
     c.execute("SELECT COUNT(*), SUM(subtotal), SUM(discount_issued), SUM(final_total) FROM daily_sales")
@@ -105,7 +105,7 @@ def manager_view_reports(c):
     print(f"💵 Net Profit (Actual Cash In): ${net_profit:.2f}")
     print("-----------------------------------")
     
-    # عرض آخر 5 فواتير بالتفصيل
+    
     print("📋 Last 5 Invoices Details:")
     c.execute("SELECT id, timestamp, final_total FROM daily_sales ORDER BY id DESC LIMIT 5")
     for row in c.fetchall():
